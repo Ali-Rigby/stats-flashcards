@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Statistics Flashcards</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    /* Category filter */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1.5px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { border-color: #60a5fa; color: #60a5fa; }
+    .filter-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+    /* Progress */
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 540px;
+      background: #1e293b;
+      border-radius: 999px;
+      height: 6px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* Score badges */
+    .score-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 8px 20px;
+      min-width: 70px;
+    }
+
+    .badge .num { font-size: 1.4rem; font-weight: 700; }
+    .badge .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge.known .num { color: #34d399; }
+    .badge.unknown .num { color: #f87171; }
+    .badge.total .num { color: #60a5fa; }
+
+    /* Card area */
+    .card-area {
+      perspective: 1200px;
+      width: 100%;
+      max-width: 540px;
+      height: 280px;
+      cursor: pointer;
+      margin-bottom: 24px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+      transform-style: preserve-3d;
+    }
+
+    .card-area.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 32px 28px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      text-align: center;
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, #1e3a5f, #1e293b);
+      border: 1.5px solid #334155;
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #2d1b69, #1e293b);
+      border: 1.5px solid #4c3b8a;
+      transform: rotateY(180deg);
+    }
+
+    .card-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 12px;
+      background: #0f172a;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .card-front .card-tag { border: 1px solid #1e40af; color: #60a5fa; }
+    .card-back .card-tag { border: 1px solid #5b21b6; color: #a78bfa; }
+
+    .card-question {
+      font-size: 1.2rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .card-answer {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #c4b5fd;
+    }
+
+    .tap-hint {
+      font-size: 0.72rem;
+      color: #475569;
+      margin-top: 14px;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      padding: 10px 28px;
+      border-radius: 12px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); opacity: 0.85; }
+
+    .btn-known {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+    }
+
+    .btn-unknown {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+    }
+
+    .btn-skip {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1.5px solid #334155;
+    }
+
+    .btn-reset {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1.5px solid #334155;
+      font-size: 0.8rem;
+      padding: 7px 18px;
+    }
+
+    /* Completion */
+    .completion {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+      max-width: 420px;
+    }
+
+    .completion.visible { display: flex; }
+
+    .completion h2 {
+      font-size: 1.6rem;
+      background: linear-gradient(135deg, #34d399, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .completion p { color: #94a3b8; font-size: 0.95rem; }
+
+    .btn-restart {
+      padding: 12px 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .btn-restart:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+
+<h1>📊 Statistics Flashcards</h1>
+<p class="subtitle">Tap a card to reveal the answer</p>
+
+<!-- Category Filters -->
+<div class="filters" id="filters"></div>
+
+<!-- Progress -->
+<div class="progress-bar-wrap">
+  <div class="progress-bar" id="progressBar" style="width:0%"></div>
+</div>
+<div class="progress-text" id="progressText">Card 1 of 60</div>
+
+<!-- Score -->
+<div class="score-row">
+  <div class="badge total"><span class="num" id="totalSeen">0</span><span class="label">Seen</span></div>
+  <div class="badge known"><span class="num" id="knownCount">0</span><span class="label">Got It</span></div>
+  <div class="badge unknown"><span class="num" id="unknownCount">0</span><span class="label">Review</span></div>
+</div>
+
+<!-- Card -->
+<div class="card-area" id="cardArea">
+  <div class="card-inner" id="cardInner">
+    <div class="card-face card-front">
+      <div class="card-tag" id="cardCategory">Intro</div>
+      <div class="card-question" id="cardQuestion">Loading...</div>
+      <div class="tap-hint">Tap to reveal answer</div>
+    </div>
+    <div class="card-face card-back">
+      <div class="card-tag" id="cardLevel">Answer</div>
+      <div class="card-answer" id="cardAnswer">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="btn-row" id="btnRow">
+  <button class="btn btn-unknown" onclick="markCard(false)">✗ Still Learning</button>
+  <button class="btn btn-skip" onclick="nextCard()">Skip →</button>
+  <button class="btn btn-known" onclick="markCard(true)">✓ Got It</button>
+</div>
+<button class="btn btn-reset" onclick="resetDeck()">↺ Reset Deck</button>
+
+<!-- Completion screen -->
+<div class="completion" id="completion">
+  <h2>🎉 Deck Complete!</h2>
+  <p id="completionMsg"></p>
+  <button class="btn-restart" onclick="resetDeck()">Start Over</button>
+  <button class="btn-restart" style="background: linear-gradient(135deg,#dc2626,#ef4444)" onclick="reviewWrong()">Review Missed Cards</button>
+</div>
+
+<script>
+const ALL_CARDS = [
+  // ── INTRODUCTORY ──────────────────────────────────────────────────────────
+  { cat: "Intro", q: "What is the mean?", a: "The arithmetic average of a dataset. Calculated by summing all values and dividing by the count: μ = Σx / n" },
+  { cat: "Intro", q: "What is the median?", a: "The middle value of an ordered dataset. For even n, it's the average of the two middle values." },
+  { cat: "Intro", q: "What is the mode?", a: "The value that appears most frequently in a dataset. A dataset can have zero, one, or multiple modes." },
+  { cat: "Intro", q: "What is the range?", a: "The difference between the maximum and minimum values in a dataset: Range = max − min." },
+  { cat: "Intro", q: "What is variance?", a: "The average of squared deviations from the mean. Population: σ² = Σ(x − μ)² / N. Sample: s² = Σ(x − x̄)² / (n−1)." },
+  { cat: "Intro", q: "What is standard deviation?", a: "The square root of variance. It measures spread in the original units of the data: σ (population) or s (sample)." },
+  { cat: "Intro", q: "What is a frequency distribution?", a: "A table or graph showing how often each value (or range of values) occurs in a dataset." },
+  { cat: "Intro", q: "What is the difference between population and sample?", a: "A population is the entire group of interest; a sample is a subset selected from the population to make inferences." },
+  { cat: "Intro", q: "What is a parameter vs. a statistic?", a: "A parameter describes a population (e.g., μ, σ). A statistic describes a sample (e.g., x̄, s) and is used to estimate parameters." },
+  { cat: "Intro", q: "What are the four levels of measurement?", a: "Nominal (categories), Ordinal (ranked order), Interval (equal gaps, no true zero), Ratio (equal gaps + true zero)." },
+  { cat: "Intro", q: "What is a histogram?", a: "A bar chart for continuous data where bars represent frequency or relative frequency of values within intervals (bins)." },
+  { cat: "Intro", q: "What is an outlier?", a: "A data point that differs significantly from other observations — often defined as beyond Q1 − 1.5·IQR or Q3 + 1.5·IQR." },
+  { cat: "Intro", q: "What is the interquartile range (IQR)?", a: "IQR = Q3 − Q1. It measures the spread of the middle 50% of data and is resistant to outliers." },
+  { cat: "Intro", q: "What is a box plot (box-and-whisker plot)?", a: "A graph showing the five-number summary: minimum, Q1, median, Q3, and maximum — often with outlier dots." },
+  { cat: "Intro", q: "What is the empirical rule (68-95-99.7 rule)?", a: "For a normal distribution: ~68% of data falls within 1σ, ~95% within 2σ, and ~99.7% within 3σ of the mean." },
+
+  // ── PROBABILITY ────────────────────────────────────────────────────────────
+  { cat: "Probability", q: "What is probability?", a: "A number between 0 and 1 expressing the likelihood of an event. P(A) = favorable outcomes / total outcomes (classical definition)." },
+  { cat: "Probability", q: "What is the complement rule?", a: "P(Aᶜ) = 1 − P(A). The probability an event does NOT occur equals one minus the probability it does." },
+  { cat: "Probability", q: "What is a conditional probability?", a: "P(A | B) = P(A ∩ B) / P(B). The probability of A given that B has already occurred." },
+  { cat: "Probability", q: "What does it mean for two events to be independent?", a: "Events A and B are independent if P(A | B) = P(A), i.e., knowing B occurred doesn't change the probability of A." },
+  { cat: "Probability", q: "State Bayes' Theorem.", a: "P(A | B) = P(B | A) · P(A) / P(B). It updates the probability of A given new evidence B." },
+  { cat: "Probability", q: "What is the addition rule for probability?", a: "P(A ∪ B) = P(A) + P(B) − P(A ∩ B). For mutually exclusive events: P(A ∪ B) = P(A) + P(B)." },
+  { cat: "Probability", q: "What is a random variable?", a: "A variable whose value is determined by the outcome of a random process. Can be discrete or continuous." },
+  { cat: "Probability", q: "What is expected value (E[X])?", a: "The weighted average of all possible values: E[X] = Σ x · P(x) for discrete; ∫ x·f(x)dx for continuous." },
+  { cat: "Probability", q: "What is the binomial distribution?", a: "Models the number of successes in n independent Bernoulli trials with success probability p. P(X=k) = C(n,k)·pᵏ·(1−p)ⁿ⁻ᵏ." },
+  { cat: "Probability", q: "What is the normal (Gaussian) distribution?", a: "A symmetric bell-shaped continuous distribution defined by mean μ and standard deviation σ. Many natural phenomena follow it." },
+  { cat: "Probability", q: "What is the Poisson distribution?", a: "Models the number of events occurring in a fixed interval. P(X=k) = e⁻λ · λᵏ / k!, where λ is the average rate." },
+  { cat: "Probability", q: "What is the Law of Large Numbers?", a: "As sample size n → ∞, the sample mean x̄ converges to the population mean μ." },
+  { cat: "Probability", q: "What is the Central Limit Theorem (CLT)?", a: "The sampling distribution of the sample mean approaches a normal distribution as n increases, regardless of the population's shape (generally n ≥ 30)." },
+
+  // ── SAMPLING DISTRIBUTIONS ────────────────────────────────────────────────
+  { cat: "Sampling Distributions", q: "What is a sampling distribution?", a: "The probability distribution of a statistic (e.g., x̄) computed across all possible samples of size n from a population. It describes how the statistic varies due to random sampling." },
+  { cat: "Sampling Distributions", q: "What is the mean of the sampling distribution of x̄?", a: "It equals the population mean μ. This is what makes x̄ an unbiased estimator — on average, it hits the true value." },
+  { cat: "Sampling Distributions", q: "What is the standard error (SE) of the sample mean?", a: "SE = σ / √n. It is the standard deviation of the sampling distribution of x̄, measuring how much x̄ varies across samples." },
+  { cat: "Sampling Distributions", q: "How does increasing n affect the sampling distribution of x̄?", a: "The standard error shrinks (SE = σ/√n), so the distribution becomes narrower. Estimates become more precise — there's less variability from sample to sample." },
+  { cat: "Sampling Distributions", q: "What is the shape of the sampling distribution of x̄ when the population is normal?", a: "Exactly normal for any sample size n." },
+  { cat: "Sampling Distributions", q: "What is the shape of the sampling distribution of x̄ when the population is not normal?", a: "It approaches normal as n increases, by the Central Limit Theorem. A common rule of thumb is n ≥ 30." },
+  { cat: "Sampling Distributions", q: "Why do sampling distributions matter for inference?", a: "Confidence intervals, hypothesis tests, and p-values are all built on knowing (or approximating) the sampling distribution of the test statistic. Without it, you can't judge how unusual a sample result is." },
+  { cat: "Sampling Distributions", q: "Can a precise estimate (narrow CI) still be inaccurate?", a: "Yes. If there is systematic bias in the sampling method, a large sample gives a very narrow interval centered on the wrong value — precise but inaccurate. Precision ≠ accuracy." },
+
+  // ── HYPOTHESIS TESTING ─────────────────────────────────────────────────────
+  { cat: "Hypothesis Testing", q: "What is a null hypothesis (H₀)?", a: "The default assumption of no effect or no difference. It is what we attempt to disprove with data." },
+  { cat: "Hypothesis Testing", q: "What is the alternative hypothesis (H₁ or Hₐ)?", a: "The claim we seek evidence for. It contradicts H₀ and is accepted when H₀ is rejected." },
+  { cat: "Hypothesis Testing", q: "What is a p-value?", a: "The probability of observing data as extreme (or more extreme) as the sample, assuming H₀ is true. Small p → strong evidence against H₀." },
+  { cat: "Hypothesis Testing", q: "What is a significance level (α)?", a: "The threshold probability (commonly 0.05) below which we reject H₀. It controls the Type I error rate." },
+  { cat: "Hypothesis Testing", q: "What is a Type I error?", a: "Rejecting H₀ when it is actually true (false positive). Its probability is α." },
+  { cat: "Hypothesis Testing", q: "What is a Type II error?", a: "Failing to reject H₀ when it is actually false (false negative). Its probability is β." },
+  { cat: "Hypothesis Testing", q: "What is statistical power?", a: "Power = 1 − β. The probability of correctly rejecting a false H₀. Higher sample size and effect size increase power." },
+  { cat: "Hypothesis Testing", q: "What is a one-tailed vs. two-tailed test?", a: "A one-tailed test checks for an effect in one direction; a two-tailed test checks for any difference (either direction). The p-value is split in two-tailed tests." },
+  { cat: "Hypothesis Testing", q: "When do you use a t-test vs. a z-test?", a: "Use a t-test when σ is unknown and/or n < 30 (uses t-distribution). Use a z-test when σ is known and n is large." },
+  { cat: "Hypothesis Testing", q: "What is a chi-square (χ²) test?", a: "Tests the association between categorical variables or goodness-of-fit. Test statistic: χ² = Σ (O − E)² / E." },
+  { cat: "Hypothesis Testing", q: "What is ANOVA?", a: "Analysis of Variance — tests whether means of three or more groups are equal by comparing within-group vs. between-group variance." },
+
+  // ── REGRESSION & CORRELATION ──────────────────────────────────────────────
+  { cat: "Regression", q: "What is the Pearson correlation coefficient (r)?", a: "Measures linear association between two variables. Ranges from −1 (perfect negative) to +1 (perfect positive); 0 = no linear relationship." },
+  { cat: "Regression", q: "What is simple linear regression?", a: "Models the relationship ŷ = b₀ + b₁x, estimating how one predictor (x) explains changes in the response variable (y)." },
+  { cat: "Regression", q: "What is R² (coefficient of determination)?", a: "The proportion of variance in y explained by the model. R² = 1 − SS_res / SS_tot. Ranges from 0 to 1." },
+  { cat: "Regression", q: "What is multiple linear regression?", a: "Extends simple regression to include multiple predictors: ŷ = b₀ + b₁x₁ + b₂x₂ + … + bₙxₙ." },
+  { cat: "Regression", q: "What is multicollinearity?", a: "When predictor variables in a regression model are highly correlated with each other, making it hard to isolate individual effects." },
+  { cat: "Regression", q: "What is heteroscedasticity?", a: "When the variance of regression residuals is not constant across all levels of the predictor. Violates OLS assumptions." },
+  { cat: "Regression", q: "What is logistic regression used for?", a: "Modeling a binary outcome variable. It predicts the log-odds (logit) of an event occurring, producing probabilities between 0 and 1." },
+
+  // ── CONFIDENCE INTERVALS ──────────────────────────────────────────────────
+  { cat: "Confidence Intervals", q: "What is a confidence interval?", a: "A range of values computed from sample data that, with a stated level of confidence (e.g., 95%), contains the true population parameter." },
+  { cat: "Confidence Intervals", q: "How is a 95% confidence interval interpreted?", a: "If we repeated sampling many times, 95% of the constructed intervals would contain the true parameter. It is NOT a 95% chance the parameter is in this specific interval." },
+  { cat: "Confidence Intervals", q: "What is the margin of error?", a: "Half the width of a confidence interval. Margin of error = critical value × standard error." },
+  { cat: "Confidence Intervals", q: "How does sample size affect a confidence interval?", a: "Larger n → smaller standard error → narrower interval → more precision." },
+
+  // ── ADVANCED ──────────────────────────────────────────────────────────────
+  { cat: "Advanced", q: "What is Bayesian inference?", a: "Updating the probability of a hypothesis using prior beliefs and new evidence via Bayes' theorem: Posterior ∝ Likelihood × Prior." },
+  { cat: "Advanced", q: "What is a prior distribution in Bayesian statistics?", a: "The probability distribution representing beliefs about a parameter before observing any data." },
+  { cat: "Advanced", q: "What is the difference between frequentist and Bayesian statistics?", a: "Frequentists treat probability as long-run frequency; parameters are fixed unknowns. Bayesians treat parameters as random variables with probability distributions reflecting uncertainty." },
+  { cat: "Advanced", q: "What is maximum likelihood estimation (MLE)?", a: "A method to estimate parameters by finding values that maximize the likelihood of observing the given data. L(θ | data) = P(data | θ)." },
+  { cat: "Advanced", q: "What is the bootstrap method?", a: "A resampling technique that repeatedly draws samples (with replacement) from the data to estimate sampling distributions and confidence intervals without assuming a distribution." },
+  { cat: "Advanced", q: "What is the bias-variance tradeoff?", a: "Model error = Bias² + Variance + Irreducible error. High bias → underfitting; high variance → overfitting. Tradeoff must be balanced." },
+  { cat: "Advanced", q: "What is a p-value's relationship to effect size?", a: "A p-value indicates statistical significance but not practical significance. Large samples can make tiny effects statistically significant; effect size (Cohen's d, r) quantifies magnitude." },
+  { cat: "Effect Sizes", q: "What is Cohen's d?", a: "A standardized effect size for comparing two means: d = (μ₁ − μ₂) / σ_pooled. Benchmarks: small = 0.2, medium = 0.5, large = 0.8." },
+  { cat: "Effect Sizes", q: "What does Cohen's d actually tell you?", a: "How many standard deviations apart two group means are. A d of 1.0 means the means differ by one full standard deviation — a large, practically meaningful difference." },
+  { cat: "Effect Sizes", q: "What is eta-squared (η²)?", a: "An effect size for ANOVA: η² = SS_between / SS_total. It represents the proportion of total variance explained by the group factor. Benchmarks: small = 0.01, medium = 0.06, large = 0.14." },
+  { cat: "Effect Sizes", q: "What is the difference between eta-squared (η²) and partial eta-squared (ηₚ²)?", a: "η² divides by total variance (including all other effects). ηₚ² divides only by the variance attributable to that factor plus its error term, making it larger and more common in multi-factor ANOVA." },
+  { cat: "Effect Sizes", q: "What is Pearson's r as an effect size?", a: "r measures the strength of a linear relationship and doubles as an effect size. Benchmarks: small = 0.1, medium = 0.3, large = 0.5. Unlike Cohen's d, it is already standardized (−1 to +1)." },
+  { cat: "Effect Sizes", q: "What is R² as an effect size?", a: "R² (r squared) is the proportion of variance in y explained by x. It ranges from 0 to 1 and is the effect size most naturally reported with regression. R² = r² for simple linear regression." },
+  { cat: "Effect Sizes", q: "How do Cohen's d, r, and η² relate to each other?", a: "All measure practical significance, just for different designs: Cohen's d = two-group comparisons; r = correlation/simple regression; η² = ANOVA. They can be converted mathematically (e.g., d = 2r / √(1−r²))." },
+  { cat: "Effect Sizes", q: "Why report effect sizes alongside p-values?", a: "P-values only tell you whether an effect is detectable given your sample size. Effect sizes tell you how big the effect is in practice. A result can be statistically significant but trivially small — or non-significant but practically important with a small sample." },
+  { cat: "Advanced", q: "What is a Type I error inflation problem in multiple testing?", a: "Running many hypothesis tests increases the chance of at least one false positive. Corrections like Bonferroni or FDR control the family-wise or false discovery rate." },
+  { cat: "Advanced", q: "What is principal component analysis (PCA)?", a: "A dimensionality reduction technique that projects data onto orthogonal axes (principal components) that capture the most variance." },
+  { cat: "Advanced", q: "What is a Markov Chain Monte Carlo (MCMC) method?", a: "Algorithms (e.g., Metropolis-Hastings, Gibbs sampling) that sample from complex posterior distributions by constructing a Markov chain whose stationary distribution is the target." },
+];
+
+const CATEGORIES = ["All", ...new Set(ALL_CARDS.map(c => c.cat))];
+
+let deck = [];
+let currentIdx = 0;
+let known = 0;
+let unknown_ct = 0;
+let wrongCards = [];
+let activeFilter = "All";
+
+function buildDeck() {
+  deck = activeFilter === "All"
+    ? [...ALL_CARDS]
+    : ALL_CARDS.filter(c => c.cat === activeFilter);
+  shuffle(deck);
+  currentIdx = 0;
+  known = 0;
+  unknown_ct = 0;
+  wrongCards = [];
+  updateDisplay();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function updateDisplay() {
+  const total = deck.length;
+  const card = deck[currentIdx];
+  const seen = known + unknown_ct;
+
+  document.getElementById('cardArea').classList.remove('flipped');
+  document.getElementById('cardCategory').textContent = card.cat;
+  document.getElementById('cardLevel').textContent = "Answer";
+  document.getElementById('cardQuestion').textContent = card.q;
+  document.getElementById('cardAnswer').textContent = card.a;
+
+  const pct = total > 0 ? (currentIdx / total) * 100 : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `Card ${currentIdx + 1} of ${total}`;
+  document.getElementById('totalSeen').textContent = seen;
+  document.getElementById('knownCount').textContent = known;
+  document.getElementById('unknownCount').textContent = unknown_ct;
+
+  document.getElementById('completion').classList.remove('visible');
+  document.getElementById('btnRow').style.display = 'flex';
+  document.getElementById('cardArea').style.display = 'block';
+}
+
+function flipCard() {
+  document.getElementById('cardArea').classList.toggle('flipped');
+}
+
+function markCard(isKnown) {
+  if (isKnown) {
+    known++;
+  } else {
+    unknown_ct++;
+    wrongCards.push(deck[currentIdx]);
+  }
+  nextCard();
+}
+
+function nextCard() {
+  currentIdx++;
+  if (currentIdx >= deck.length) {
+    showCompletion();
+  } else {
+    updateDisplay();
+  }
+}
+
+function showCompletion() {
+  document.getElementById('completion').classList.add('visible');
+  document.getElementById('btnRow').style.display = 'none';
+  document.getElementById('cardArea').style.display = 'none';
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('progressText').textContent = `All ${deck.length} cards completed!`;
+  document.getElementById('totalSeen').textContent = deck.length;
+  document.getElementById('knownCount').textContent = known;
+  document.getElementById('unknownCount').textContent = unknown_ct;
+
+  const pct = Math.round((known / deck.length) * 100);
+  document.getElementById('completionMsg').textContent =
+    `You got ${known} out of ${deck.length} correct (${pct}%)! ${pct >= 80 ? '🚀 Great job!' : pct >= 50 ? '📚 Keep practicing!' : '💪 Keep studying — you\'ve got this!'}`;
+}
+
+function resetDeck() {
+  buildDeck();
+  document.getElementById('completion').classList.remove('visible');
+  document.getElementById('btnRow').style.display = 'flex';
+  document.getElementById('cardArea').style.display = 'block';
+}
+
+function reviewWrong() {
+  if (wrongCards.length === 0) {
+    alert('No missed cards to review!');
+    return;
+  }
+  deck = [...wrongCards];
+  shuffle(deck);
+  currentIdx = 0;
+  known = 0;
+  unknown_ct = 0;
+  wrongCards = [];
+  document.getElementById('completion').classList.remove('visible');
+  document.getElementById('btnRow').style.display = 'flex';
+  document.getElementById('cardArea').style.display = 'block';
+  updateDisplay();
+}
+
+// Build filter buttons
+const filtersEl = document.getElementById('filters');
+CATEGORIES.forEach(cat => {
+  const btn = document.createElement('button');
+  btn.className = 'filter-btn' + (cat === 'All' ? ' active' : '');
+  btn.textContent = cat;
+  btn.onclick = () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = cat;
+    buildDeck();
+  };
+  filtersEl.appendChild(btn);
+});
+
+// Flip on card click
+document.getElementById('cardArea').addEventListener('click', flipCard);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+  if (e.code === 'ArrowRight') nextCard();
+  if (e.code === 'ArrowUp') markCard(true);
+  if (e.code === 'ArrowDown') markCard(false);
+});
+
+// Init
+buildDeck();
+</script>
+</body>
+</html>
